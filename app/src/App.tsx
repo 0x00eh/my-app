@@ -29,7 +29,7 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
       <p className="">
-        This is a manual deployment with ubuntu VM, Artifact, Service Account, Docker and Terraform | Automation
+        This is a manual deployment with ubuntu VM, Artifact, Service Account, Docker and Terraform | Automation | I am validation #1
       </p>
     </>
   )
