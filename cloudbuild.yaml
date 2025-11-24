@@ -1,44 +1,20 @@
 steps:
-  # 1. Build Docker image
   - name: "gcr.io/cloud-builders/docker"
-    args:
-      - "build"
-      - "-t"
-      - "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}"
-      - "."
+    args: ["build", "-t", "${_IMAGE_PATH}", "."]
 
-  # 2. Push Docker image
   - name: "gcr.io/cloud-builders/docker"
-    args:
-      - "push"
-      - "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}"
+    args: ["push", "${_IMAGE_PATH}"]
 
-  # 3. Deploy to VM via SSH and run container
   - name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: "bash"
     args:
-      - "-c"
-      - |
-        echo "Deploying to VM..."
-        gcloud compute ssh ${_VM_USER}@${_VM_NAME} --zone="${_ZONE}" --command="
-          sudo docker stop react-container || true &&
-          sudo docker rm react-container || true &&
-          sudo docker pull ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG} &&
-          sudo docker run -d -p 80:80 --name react-container ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}
-        "
+      - compute
+      - ssh
+      - ${_VM_NAME}
+      - "--zone=${_ZONE}"
+      - "--command=sudo docker pull ${_IMAGE_PATH} && sudo docker rm -f app || true && sudo docker run -d --name app -p ${_CONTAINER_PORT}:${_CONTAINER_PORT} ${_IMAGE_PATH}"
 
 substitutions:
-  _PROJECT_ID: "exemplary-oath-478810-g0"
-  _REGION: "us-central1"
-  _REPOSITORY: "react-repo"
-  _IMAGE_NAME: "react-app"
-  _TAG: "latest"
-  _VM_NAME: "react-ubuntu-vm"
-  _ZONE: "us-central1-a"
-  _VM_USER: "ubuntu"
-
-images:
-  - "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}"
-
-options:
-  logs_bucket: "gs://exemplary-oath-478810-g0-cloudbuild-logs-ravi"  # Add your logs bucket here
+  _IMAGE_PATH="us-central1-docker.pkg.dev/$PROJECT_ID/${_REPO}/${_IMAGE}:${_TAG}"
+  _VM_NAME="${_VM}"
+  _ZONE="${_ZONE}"
+  _CONTAINER_PORT="${_PORT}"
