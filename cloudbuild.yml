@@ -1,0 +1,44 @@
+steps:
+
+# 1. Build Docker image
+- name: "gcr.io/cloud-builders/docker"
+  args: [
+    "build",
+    "-t",
+    "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}",
+    "."
+  ]
+
+# 2. Push Docker image
+- name: "gcr.io/cloud-builders/docker"
+  args: [
+    "push",
+    "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}"
+  ]
+
+# 3. Deploy to VM via SSH
+- name: "gcr.io/cloud-builders/gcloud"
+  entrypoint: bash
+  args:
+    - -c
+    - |
+      echo "Connecting to VM and running deploy..."
+      gcloud compute ssh ${_VM_USER}@${_VM_NAME} --zone=${_ZONE} --command="
+        sudo docker stop react-container || true &&
+        sudo docker rm react-container || true &&
+        sudo docker pull ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG} &&
+        sudo docker run -d -p 80:80 --name react-container ${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}
+      "
+
+substitutions:
+  _PROJECT_ID = "your-project-id"
+  _REGION     = "us-central1"
+  _REPOSITORY = "react-repo"
+  _IMAGE_NAME = "react-app"
+  _TAG        = "latest"
+  _VM_NAME    = "react-ubuntu-vm"
+  _ZONE       = "us-central1-a"
+  _VM_USER    = "ubuntu"
+
+images:
+  - "${_REGION}-docker.pkg.dev/${_PROJECT_ID}/${_REPOSITORY}/${_IMAGE_NAME}:${_TAG}"
