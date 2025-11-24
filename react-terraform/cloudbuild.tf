@@ -13,7 +13,7 @@ resource "google_cloudbuild_trigger" "trigger" {
   filename = "cloudbuild.yaml"
 }
 resource "google_storage_bucket" "cloudbuild_logs" {
-  name          = "${var.project_id}-cloudbuild-logs"
+  name          = "${var.project_id}-cloudbuild-logs-ravi"
   location      = var.region
   storage_class = "STANDARD"
   force_destroy = true
