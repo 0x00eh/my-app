@@ -1,0 +1,30 @@
+steps:
+  # Step 1: Connect to VM via SSH and run deploy script
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        echo "Starting deployment on VM..."
+        gcloud compute ssh ${_VM_USER}@${_VM_NAME} --zone=${_VM_ZONE} \
+        --command="sudo /opt/deploy/deploy.sh ${_PROJECT_ID} ${_REGION} ${_REPOSITORY} ${_IMAGE_NAME}"
+
+# Optional notification after successful deployment
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: bash
+    args:
+      - "-c"
+      - |
+        echo "Deployment completed successfully!"
+
+# Cloud Build must substitute values dynamically (Terraform / Cloud Build Trigger will pass these)
+substitutions:
+  _PROJECT_ID="exemplary-oath-478810-g0"
+  _REGION="us-central1"
+  _REPOSITORY="react-repo"
+  _IMAGE_NAME="react-app"
+  _VM_NAME="react-ubuntu-vm"
+  _VM_ZONE="us-central1-a"
+  _VM_USER="ubuntu"
+
+timeout: "900s"
