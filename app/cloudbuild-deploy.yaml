@@ -1,0 +1,12 @@
+steps:
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      gcloud compute ssh $VM_NAME --zone=$ZONE --command "
+        sudo docker pull us-central1-docker.pkg.dev/$PROJECT_ID/react-repo/react-app:$TAG &&
+        sudo docker stop react-app || true &&
+        sudo docker rm react-app || true &&
+        sudo docker run -d --name react-app -p 80:80 us-central1-docker.pkg.dev/$PROJECT_ID/react-repo/react-app:$TAG
+      "
