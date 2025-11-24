@@ -30,3 +30,9 @@ resource "google_pubsub_topic_iam_member" "artifact_to_pubsub" {
   role   = "roles/pubsub.publisher"
   member = "serviceAccount:${var.cloudbuild_service_account}"
 }
+# Allow Cloud Build service account to write logs to GCS bucket
+resource "google_project_iam_binding" "cb_storage_admin" {
+  project = var.project_id
+  role    = "roles/storage.admin"
+  members = ["serviceAccount:${var.cloudbuild_service_account}"]
+}
