@@ -1,21 +1,22 @@
-resource "google_cloudbuild_trigger" "artifact_push_trigger" {
-  name        = "deploy-on-image-push"
-  description = "Deploy latest docker image to VM after push"
+# ----- Cloud Build Trigger for GitHub -----
+resource "google_cloudbuild_trigger" "trigger" {
+  name = var.cloudbuild_trigger_name
 
-  location    = "global"
-
-  pubsub_config {
-    topic = google_pubsub_topic.artifact_push_topic.id
+  github {
+    owner = var.github_owner
+    name  = var.github_repo
+    push {
+      branch = "^main$"
+    }
   }
 
   filename = "cloudbuild.yaml"
+}
+resource "google_storage_bucket" "cloudbuild_logs" {
+  name          = "${var.project_id}-cloudbuild-logs"
+  location      = var.region
+  storage_class = "STANDARD"
+  force_destroy = true
 
-  substitutions = {
-    _PROJECT_ID = var.project_id
-    _REPOSITORY = var.artifact_registry_name
-    _REGION     = var.region
-    _VM_NAME    = var.vm_name
-    _VM_ZONE    = var.zone
-    _VM_USER    = var.vm_user
-  }
+  uniform_bucket_level_access = true
 }
